@@ -1,5 +1,5 @@
 
-name: Retail Inventory CI
+name: Retail Inventory Management CI
 
 on:
   push:
@@ -8,13 +8,20 @@ on:
     branches: [master, main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   backend:
-    name: Spring Boot Backend
+    name: Spring Boot Backend Build and Tests
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: retail-inventory
+
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Java
@@ -23,31 +30,34 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: maven
+          cache-dependency-path: retail-inventory/pom.xml
 
-      - name: Build and test backend
-        run: chmod +x mvnw && ./mvnw --batch-mode clean verify
+      - name: Build and Test Backend
+        run: |
+          chmod +x mvnw
+          ./mvnw --batch-mode clean verify
 
   frontend:
-    name: React Frontend
+    name: Angular Frontend Build
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: frontend
+        working-directory: retail-inventory/frontend/retailstock-angular
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          
+          cache: npm
+          cache-dependency-path: retail-inventory/frontend/retailstock-angular/package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Build frontend
+      - name: Build Angular Application
         run: npm run build
